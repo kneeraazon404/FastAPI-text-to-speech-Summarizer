@@ -59,52 +59,41 @@ def generate_tcm_advice(summary: str) -> str:
     return response.choices[0].message
 
 
-# Streaming function for generating clinical history
 async def generate_history_streaming(summary_input: SummaryInput):
     result = generate_clinical_history(summary_input.summary)
-    yield json.dumps(
-        {"content": result, "role": "assistant"}, ensure_ascii=False, indent=2
-    )
+    yield {"content": result, "role": "assistant"}
 
 
 @app.post("/generate_clinical_history")
 async def generate_history_endpoint(summary_input: SummaryInput):
-    streaming_response = StreamingResponse(
-        generate_history_streaming(summary_input), media_type="application/json"
-    )
+    streaming_response = StreamingResponse(generate_history_streaming(summary_input))
+    streaming_response.headers["Content-Type"] = "application/json"
     return streaming_response
 
 
-# Streaming function for generating differential diagnosis
 async def generate_differential_diagnosis_streaming(summary_input: SummaryInput):
     result = generate_differential_diagnosis(summary_input.summary)
-    yield json.dumps(
-        {"content": result, "role": "assistant"}, ensure_ascii=False, indent=2
-    )
+    yield {"content": result, "role": "assistant"}
 
 
 @app.post("/generate_differential_diagnosis")
 async def generate_differential_diagnosis_endpoint(summary_input: SummaryInput):
     streaming_response = StreamingResponse(
-        generate_differential_diagnosis_streaming(summary_input),
-        media_type="application/json",
+        generate_differential_diagnosis_streaming(summary_input)
     )
+    streaming_response.headers["Content-Type"] = "application/json"
     return streaming_response
 
 
-# Streaming function for generating TCM advice
 async def generate_tcm_advice_streaming(summary_input: SummaryInput):
     result = generate_tcm_advice(summary_input.summary)
-    yield json.dumps(
-        {"content": result, "role": "assistant"}, ensure_ascii=False, indent=2
-    )
+    yield {"content": result, "role": "assistant"}
 
 
 @app.post("/generate_tcm_advice")
 async def generate_tcm_advice_endpoint(summary_input: SummaryInput):
-    streaming_response = StreamingResponse(
-        generate_tcm_advice_streaming(summary_input), media_type="application/json"
-    )
+    streaming_response = StreamingResponse(generate_tcm_advice_streaming(summary_input))
+    streaming_response.headers["Content-Type"] = "application/json"
     return streaming_response
 
 
