@@ -1,43 +1,17 @@
 import os
-import sqlite3
-from fastapi import FastAPI
 import azure.cognitiveservices.speech as speechsdk
 import openai
-
+from database import save_transcription
 from dotenv import load_dotenv
 
-app = FastAPI()
 _ = load_dotenv()
 
 subscription_key = os.getenv("SPEECH_KEY")
 service_region = os.getenv("SERVICE_REGION")
 custom_endpoint = os.getenv("ENDPOINT_ID")
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
-
-def create_transcriptions_table():
-    conn = sqlite3.connect("transcriptions.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS transcriptions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        transcription TEXT,
-        language_code TEXT
-        )"""
-    )
-    conn.commit()
-    conn.close()
-
-
-def save_transcription(transcription, language_code):
-    conn = sqlite3.connect("transcriptions.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO transcriptions (transcription, language_code) VALUES (?, ?)",
-        (transcription, language_code),
-    )
-    conn.commit()
-    conn.close()
+gpt_model = os.getenv("GPT_MODEL")
+language_code = os.getenv("LANGUAGE_CODE")
 
 
 def generate_summary(transcriptions, language_code):
@@ -60,7 +34,6 @@ def generate_summary(transcriptions, language_code):
     return summarized_text
 
 
-@app.get("/transcribe")
 def transcribe_microphone():
     language_code = "zh-HK"
     speech_config = speechsdk.SpeechConfig(
@@ -100,31 +73,16 @@ def transcribe_microphone():
     # Save transcription to SQLite database
     save_transcription(transcription, language_code)
 
-    return {"Transcription": transcription}
+    return transcription
 
 
-@app.get("/summary")
-def get_summary():
-    language_code = "zh-HK"
-    conn = sqlite3.connect("transcriptions.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT transcription FROM transcriptions WHERE language_code=?",
-        (language_code,),
+def send_message(summary: str, initial_prompt) -> str:
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": initial_prompt},
+            {"role": "user", "content": summary},
+        ],
+        temperature=0,
     )
-    rows = cursor.fetchall()
-    transcriptions = [row[0] for row in rows]
-    conn.close()
-
-    if not transcriptions:
-        return {"Message": "No transcriptions found."}
-
-    summary = generate_summary(transcriptions, language_code)
-    return {"Summary": summary}
-
-
-if __name__ == "__main__":
-    create_transcriptions_table()
-    import uvicorn
-
-    uvicorn.run(app, host="localhost", port=8000)
+    return response.choices[0].message
