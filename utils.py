@@ -1,8 +1,13 @@
 import os
+import time
+
 import azure.cognitiveservices.speech as speechsdk
 import openai
-from database import save_transcription
+import tensorflow as tf
+import tensorflow_hub as hub
 from dotenv import load_dotenv
+
+from database import fetch_transcriptions, save_transcription
 
 _ = load_dotenv()
 
@@ -19,7 +24,7 @@ def generate_summary(transcriptions, language_code):
     transcription_text = " ".join(transcriptions)
 
     # Generate summary using OpenAI GPT-3.5 model
-    prompt = f"[{language_code}] Please summarize the following transcriptions:\n{transcription_text}\nSummary:"
+    prompt = f"[{language_code}] Please summarize the following transcriptions:\n{transcription_text}\nSummary: in  same language"
     response = openai.Completion.create(
         engine="text-davinci-003",
         prompt=prompt,
@@ -35,12 +40,12 @@ def generate_summary(transcriptions, language_code):
 
 
 def transcribe_microphone():
-    language_code = "zh-HK"
     speech_config = speechsdk.SpeechConfig(
         subscription=subscription_key, region=service_region
     )
     speech_config.endpoint_id = custom_endpoint
     speech_config.speech_recognition_language = language_code
+
     audio_config = speechsdk.AudioConfig(filename="output.wav")
     speech_recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config
@@ -64,9 +69,8 @@ def transcribe_microphone():
 
     speech_recognizer.start_continuous_recognition()
 
-    # Keep transcribing until manually stopped
-    while not done:
-        pass
+    # Run transcription for the specified duration
+    time.sleep(60)
 
     speech_recognizer.stop_continuous_recognition()
 
@@ -86,3 +90,19 @@ def send_message(summary: str, initial_prompt) -> str:
         temperature=0,
     )
     return response.choices[0].message
+
+
+# Load the Universal Sentence Encoder's TF Hub module
+embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+
+def text_to_vector(text):
+    """Function to convert a given text into a vector using the Universal Sentence Encoder."""
+
+    # The USE model is used to generate embeddings for the input text
+    embeddings = embed([text])
+
+    # The output embeddings is a 2D tensor, for simplicity we can convert this to a 1D tensor (numpy array)
+    vector = tf.reshape(embeddings, [-1]).numpy()
+
+    return vector

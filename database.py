@@ -38,3 +38,14 @@ def fetch_transcriptions(language_code):
     conn.close()
 
     return [row[0] for row in rows]
+
+
+def save_summary(summary, language_code):
+    conn = sqlite3.connect("sqlite3.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        f"INSERT INTO {Transcription.table} ({Transcription.summary}, {Transcription.language_code}) VALUES (?, ?)",
+        (summary, language_code),
+    )
+    conn.commit()
+    conn.close()
