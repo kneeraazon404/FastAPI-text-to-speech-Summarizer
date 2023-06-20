@@ -45,8 +45,7 @@ def transcribe_microphone():
     )
     speech_config.endpoint_id = custom_endpoint
     speech_config.speech_recognition_language = language_code
-
-    audio_config = speechsdk.AudioConfig(filename="output.wav")
+    audio_config = speechsdk.AudioConfig(use_default_microphone=True)
     speech_recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config
     )

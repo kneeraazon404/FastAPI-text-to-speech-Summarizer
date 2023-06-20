@@ -22,5 +22,5 @@ pip install -r requirements.txt
 4 Run the server
 
 ```bash
-uvicorn main:app --reload
+python main.py
 ```
