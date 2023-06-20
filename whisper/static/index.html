@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebRTC Whisper ASR</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="/static/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+
+</head>
+
+<body>
+    <div class="jumbotron">
+
+        <div class="container">
+            <img id="logo" class="display-4 float-left" src="/static/kaldi_logo.png">
+            <div>
+                <h1 class="display-4">Whisper live speech recognition demo</h1>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+
+        <p>
+            <button class="btn btn-success" id="start" onclick="start()">Start</button>
+            <button class="btn btn-danger d-none" id="stop" onclick="stop()">Stop</button>
+            <button class="btn btn-primary" id="download" disabled onclick="download()">Download</button>
+            <span id="status" class="text-uppercase text-muted">Press start</span>
+            <a id="download_href">Download Me</a>
+        </p>
+
+        <div id="output"></div>
+
+        <!--script src="http://localhost:8888/static/socket.io.js"></script-->
+        <script src="http://localhost:8888/static/socket.io.js"></script>
+        <script src="/static/client.js"></script>
+    </div>
+</body>
+
+</html>
